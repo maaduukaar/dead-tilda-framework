@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калькулятор высот для блоков Tilda (v2.3)</title>
+    <title>Калькулятор высот для блоков Tilda (v2.5)</title>
     <style>
         /* Общие стили для страницы */
         body {
@@ -160,7 +160,7 @@
 <body>
 
     <div class="container">
-        <h1>Калькулятор высот (v2.3)</h1>
+        <h1>Калькулятор высот для блоков Tilda (v2.5)</h1>
 
         <div class="input-group">
             <label for="titleInput">Текст строки (заголовок блока)</label>
@@ -184,6 +184,14 @@
             const resultsDiv = document.getElementById('results');
             const titleInput = document.getElementById('titleInput');
             const descriptionInput = document.getElementById('descriptionInput');
+            
+            // Строка для отступов
+            const indent = '             ';
+
+            // Функция для добавления отступов к каждой строке
+            const addIndentation = (codeString) => {
+                return codeString.split('\n').map(line => indent + line.trim()).join('\n');
+            };
 
             // Функция для расчета
             const calculateValues = () => {
@@ -194,25 +202,26 @@
                 const descriptionLength = descriptionText.length;
 
                 // --- Алгоритм A: Расчет "Высоты строки" ---
-                // Улучшенный алгоритм: Учитываем или явный перенос строки (>1), или длинную одиночную строку (>50 симв.), которая перенесется на мобильном
                 let isTitleLongForMobile = false;
                 if (titleLines.length > 1) {
                     isTitleLongForMobile = true;
-                } else if (titleLines.length === 1 && titleLines[0].length > 50) { // Порог в 50 символов для переноса
+                } else if (titleLines.length === 1 && titleLines[0].length > 50) {
                     isTitleLongForMobile = true;
                 }
                 const headerHeight320 = isTitleLongForMobile ? 82 : 66;
 
-                const headerCode = `
-    data-artboard-screens="320,480,640,960,1200"
-    data-artboard-height="80"
-    data-artboard-valign="center"
-    data-artboard-upscale="window"
-    data-artboard-height-res-320="${headerHeight320}"
-    data-artboard-height-res-480="66"
-    data-artboard-height-res-640="66"
-    data-artboard-height-res-960="66"
-                `.trim();
+                const headerCodeRaw = `
+                    data-artboard-screens="320,480,640,960,1200"
+                    data-artboard-height="80"
+                    data-artboard-valign="center"
+                    data-artboard-upscale="window"
+                    data-artboard-height-res-320="${headerHeight320}"
+                    data-artboard-height-res-480="66"
+                    data-artboard-height-res-640="66"
+                    data-artboard-height-res-960="66"
+                `;
+                const headerCode = addIndentation(headerCodeRaw);
+
 
                 // --- Алгоритм B: Расчет на основе ДЛИНЫ ТЕКСТА ---
                 const calculations = {
@@ -237,16 +246,17 @@
                 const blockHeight480 = getResult('blockHeight', '480');
                 const blockHeight320 = getResult('blockHeight', '320');
                 
-                const blockCode = `
-    data-artboard-screens="320,480,640,960,1200"
-    data-artboard-height="${blockHeight1200}"
-    data-artboard-valign="center"
-    data-artboard-upscale="window"
-    data-artboard-height-res-320="${blockHeight320}"
-    data-artboard-height-res-480="${blockHeight480}"
-    data-artboard-height-res-640="${blockHeight640}"
-    data-artboard-height-res-960="${blockHeight960}"
-                `.trim();
+                const blockCodeRaw = `
+                    data-artboard-screens="320,480,640,960,1200"
+                    data-artboard-height="${blockHeight1200}"
+                    data-artboard-valign="center"
+                    data-artboard-upscale="window"
+                    data-artboard-height-res-320="${blockHeight320}"
+                    data-artboard-height-res-480="${blockHeight480}"
+                    data-artboard-height-res-640="${blockHeight640}"
+                    data-artboard-height-res-960="${blockHeight960}"
+                `;
+                const blockCode = addIndentation(blockCodeRaw);
                 
                 // Рассчитываем значения для позиции кнопки
                 const buttonTop1200 = getResult('buttonTop', '1200');
@@ -255,44 +265,46 @@
                 const buttonTop480 = getResult('buttonTop', '480');
                 const buttonTop320 = getResult('buttonTop', '320');
 
-                const buttonCode = `
-    data-field-top-value="${buttonTop1200}"
-    data-field-top-res-320-value="${buttonTop320}"
-    data-field-top-res-480-value="${buttonTop480}"
-    data-field-top-res-640-value="${buttonTop640}"
-    data-field-top-res-960-value="${buttonTop960}"
-                `.trim();
+                const buttonCodeRaw = `
+                    data-field-top-value="${buttonTop1200}"
+                    data-field-top-res-320-value="${buttonTop320}"
+                    data-field-top-res-480-value="${buttonTop480}"
+                    data-field-top-res-640-value="${buttonTop640}"
+                    data-field-top-res-960-value="${buttonTop960}"
+                `;
+                const buttonCode = addIndentation(buttonCodeRaw);
 
-                const fullButtonCode = `
-    data-elem-type="button"
-    data-field-top-value="${buttonTop1200}"
-    data-field-left-value="220"
-    data-field-height-value="50"
-    data-field-width-value="240"
-    data-field-axisy-value="top"
-    data-field-axisx-value="left"
-    data-field-container-value="grid"
-    data-field-topunits-value="px"
-    data-field-leftunits-value="px"
-    data-field-heightunits-value="px"
-    data-field-widthunits-value="px"
-    data-field-top-res-320-value="${buttonTop320}"
-    data-field-left-res-320-value="50"
-    data-field-height-res-320-value="50"
-    data-field-width-res-320-value="220"
-    data-field-top-res-480-value="${buttonTop480}"
-    data-field-left-res-480-value="130"
-    data-field-height-res-480-value="45"
-    data-field-width-res-480-value="220"
-    data-field-top-res-640-value="${buttonTop640}"
-    data-field-left-res-640-value="10"
-    data-field-width-res-640-value="230"
-    data-field-top-res-960-value="${buttonTop960}"
-    data-field-left-res-960-value="22"
-                `.trim();
+                const fullButtonCodeRaw = `
+                    data-elem-type="button"
+                    data-field-top-value="${buttonTop1200}"
+                    data-field-left-value="220"
+                    data-field-height-value="50"
+                    data-field-width-value="240"
+                    data-field-axisy-value="top"
+                    data-field-axisx-value="left"
+                    data-field-container-value="grid"
+                    data-field-topunits-value="px"
+                    data-field-leftunits-value="px"
+                    data-field-heightunits-value="px"
+                    data-field-widthunits-value="px"
+                    data-field-top-res-320-value="${buttonTop320}"
+                    data-field-left-res-320-value="50"
+                    data-field-height-res-320-value="50"
+                    data-field-width-res-320-value="220"
+                    data-field-top-res-480-value="${buttonTop480}"
+                    data-field-left-res-480-value="130"
+                    data-field-height-res-480-value="45"
+                    data-field-width-res-480-value="220"
+                    data-field-top-res-640-value="${buttonTop640}"
+                    data-field-left-res-640-value="10"
+                    data-field-width-res-640-value="230"
+                    data-field-top-res-960-value="${buttonTop960}"
+                    data-field-left-res-960-value="22"
+                `;
+                const fullButtonCode = addIndentation(fullButtonCodeRaw);
 
 
-                // Отображаем результаты, включая новый блок
+                // Отображаем результаты
                 displayResults(headerCode, blockCode, buttonCode, fullButtonCode);
             };
 
