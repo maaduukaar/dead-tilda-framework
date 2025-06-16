@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор высоты по пикселям</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark gray background */
+        }
+        .calculator-card {
+            background-color: #1f2937; /* Lighter dark card */
+            border: 1px solid #374151;
+        }
+        .result-item {
+            border-left: 4px solid #4f46e5; /* Indigo accent */
+            transition: background-color 0.3s ease;
+        }
+        .result-item:hover {
+            background-color: #374151;
+        }
+        .input-field {
+            background-color: #374151;
+            color: #d1d5db;
+            border: 1px solid #4b5563;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px #4f46e5;
+        }
+        .placeholder-color::placeholder {
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="calculator-card w-full max-w-md p-6 sm:p-8 rounded-xl shadow-2xl">
+        
+        <!-- Заголовок -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white">Калькулятор высоты</h1>
+            <p class="text-gray-400 mt-2">Введите исходное значение и кликните на результат, чтобы скопировать.</p>
+        </div>
+
+        <!-- Поле ввода -->
+        <div class="mb-6">
+            <label for="inputValue" class="block mb-2 text-sm font-medium text-gray-300">Исходное значение (px)</label>
+            <input type="number" id="inputValue" class="input-field placeholder-color w-full p-3 rounded-lg text-lg focus:ring-2 focus:ring-indigo-500" placeholder="Например: 1500">
+        </div>
+
+        <!-- Результаты -->
+        <div id="results" class="space-y-4">
+             <!-- Сюда будут добавляться результаты -->
+        </div>
+        
+        <!-- Сообщение-подсказка -->
+        <div id="hint" class="text-center text-gray-500 mt-8">
+            <p>Результаты появятся здесь после ввода значения.</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Получаем элементы DOM
+        const inputValue = document.getElementById('inputValue');
+        const resultsContainer = document.getElementById('results');
+        const hint = document.getElementById('hint');
+
+        /**
+         * Копирует переданный текст в буфер обмена и показывает визуальное подтверждение.
+         * @param {number | string} text - Текст для копирования.
+         * @param {HTMLElement} element - Элемент, по которому кликнули.
+         */
+        function copyValue(text, element) {
+            // Создаем временный элемент textarea для копирования
+            const textArea = document.createElement('textarea');
+            textArea.value = text.toString();
+
+            // Скрываем его от пользователя
+            textArea.style.position = 'fixed';
+            textArea.style.top = '-9999px';
+            textArea.style.left = '-9999px';
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                // Выполняем команду копирования
+                document.execCommand('copy');
+
+                // Показываем визуальное подтверждение
+                const labelSpan = element.querySelector('.result-label');
+                if (labelSpan) {
+                    const originalText = labelSpan.innerText;
+                    labelSpan.innerText = 'Скопировано!';
+                    labelSpan.style.color = '#10B981'; // Зеленый цвет для успеха
+
+                    // Возвращаем исходный текст через 1.5 секунды
+                    setTimeout(() => {
+                        labelSpan.innerText = originalText;
+                        labelSpan.style.color = ''; // Сбрасываем цвет
+                    }, 1500);
+                }
+            } catch (err) {
+                console.error('Не удалось скопировать текст: ', err);
+            }
+
+            // Удаляем временный элемент
+            document.body.removeChild(textArea);
+        }
+
+        /**
+         * Рассчитывает и отображает результаты на основе введенного значения.
+         */
+        function calculateAndDisplay() {
+            const rawValue = inputValue.value;
+
+            if (rawValue === '') {
+                resultsContainer.innerHTML = '';
+                hint.style.display = 'block';
+                return;
+            }
+
+            const baseValue = parseFloat(rawValue);
+            
+            if (isNaN(baseValue)) {
+                resultsContainer.innerHTML = '<p class="text-red-400 text-center">Пожалуйста, введите число.</p>';
+                hint.style.display = 'none';
+                return;
+            }
+
+            hint.style.display = 'none';
+
+            // Применяем формулы и округляем вверх до целого числа (Math.ceil)
+            const res1200 = Math.ceil(baseValue * 0.625);
+            const res320 = Math.ceil((baseValue * 0.75) - 20);
+            const res480 = Math.ceil((baseValue * 0.875) - 4);
+            const res680 = Math.ceil(baseValue * 0.8);
+            const res960 = Math.ceil(baseValue * 0.96);
+            
+            // Формируем HTML для вывода результатов с добавлением onclick и cursor-pointer
+            resultsContainer.innerHTML = `
+                <div class="result-item p-4 rounded-lg bg-gray-800 cursor-pointer" onclick="copyValue(${res1200}, this)">
+                    <div class="flex justify-between items-center">
+                        <span class="result-label text-gray-400 transition-colors duration-300">Для 1200px:</span>
+                        <span class="text-xl font-semibold text-white">${res1200}</span>
+                    </div>
+                </div>
+                <div class="result-item p-4 rounded-lg bg-gray-800 cursor-pointer" onclick="copyValue(${res320}, this)">
+                    <div class="flex justify-between items-center">
+                        <span class="result-label text-gray-400 transition-colors duration-300">Для 320px:</span>
+                        <span class="text-xl font-semibold text-white">${res320}</span>
+                    </div>
+                </div>
+                <div class="result-item p-4 rounded-lg bg-gray-800 cursor-pointer" onclick="copyValue(${res480}, this)">
+                    <div class="flex justify-between items-center">
+                        <span class="result-label text-gray-400 transition-colors duration-300">Для 480px:</span>
+                        <span class="text-xl font-semibold text-white">${res480}</span>
+                    </div>
+                </div>
+                <div class="result-item p-4 rounded-lg bg-gray-800 cursor-pointer" onclick="copyValue(${res680}, this)">
+                    <div class="flex justify-between items-center">
+                        <span class="result-label text-gray-400 transition-colors duration-300">Для 680px:</span>
+                        <span class="text-xl font-semibold text-white">${res680}</span>
+                    </div>
+                </div>
+                <div class="result-item p-4 rounded-lg bg-gray-800 cursor-pointer" onclick="copyValue(${res960}, this)">
+                    <div class="flex justify-between items-center">
+                        <span class="result-label text-gray-400 transition-colors duration-300">Для 960px:</span>
+                        <span class="text-xl font-semibold text-white">${res960}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Добавляем слушатель события на ввод данных
+        inputValue.addEventListener('input', calculateAndDisplay);
+    </script>
+</body>
+</html>
