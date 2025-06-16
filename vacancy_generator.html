@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- App Version: v0.2.1 -->
+    <title>Генератор блоков вакансий</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Встроенные стили в стиле Google (Светлая тема) */
+        :root {
+            --background-color: #f1f3f4;
+            --surface-color: #ffffff;
+            --primary-text-color: #202124;
+            --secondary-text-color: #5f6368;
+            --accent-color: #1a73e8;
+            --accent-color-hover: #185abc;
+            --input-background-color: #ffffff;
+            --border-color: #dadce0;
+            --success-color: #1e8e3e;
+        }
+        body {
+            font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--background-color);
+            color: var(--primary-text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: var(--surface-color);
+            padding: 30px 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: var(--primary-text-color);
+            font-weight: 500;
+        }
+        .form-group, .result-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--secondary-text-color);
+        }
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--input-background-color);
+            border: 1px solid var(--border-color);
+            color: var(--primary-text-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-size: 16px;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+        textarea {
+            resize: vertical;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            min-height: 150px;
+        }
+        .primary-button {
+            display: inline-block;
+            width: auto;
+            padding: 12px 24px;
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border: none;
+            border-radius: 100px; /* Pill shape */
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            float: right;
+        }
+        .primary-button:hover {
+            background-color: var(--accent-color-hover);
+        }
+        .primary-button:active {
+            transform: scale(0.98);
+        }
+        .form-actions {
+            overflow: hidden; /* To contain the floated button */
+            margin-top: 20px;
+        }
+        .result-container {
+            position: relative;
+        }
+        #copyBtn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 6px 10px;
+            background-color: #f1f3f4;
+            color: var(--secondary-text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            display: none; /* Скрыта по умолчанию */
+            font-size: 12px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        #copyBtn:hover {
+            background-color: #e8eaed;
+            border-color: var(--secondary-text-color);
+        }
+        #copyMessage {
+            text-align: center;
+            margin-top: 15px;
+            color: var(--success-color);
+            font-weight: 500;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Генератор Вакансий</h1>
+
+        <div class="form-group">
+            <label for="vacancyCount">Общее количество вакансий (для класса uc-accord-a-X)</label>
+            <input type="number" id="vacancyCount" value="8">
+        </div>
+
+        <div class="form-group">
+            <label for="jobTitle">Название вакансии</label>
+            <input type="text" id="jobTitle" value="Python разработчик">
+        </div>
+
+        <div class="form-group">
+            <label for="jobDescription">Описание вакансии (в формате HTML)</label>
+            <textarea id="jobDescription" rows="10" placeholder="Вставьте сюда HTML-код описания..."><strong>Описание вакансии:</strong><br /><br /><p>Мы ищем Python-разработчика, который присоединится к команде, разрабатывающей плагины для нашего редактора документов. Это работа на стыке серверного бэкенда и клиентского интерфейса, с упором на Python и возможностью использовать JavaScript для UI-компонентов.</p><br /><br /><strong>Обязанности:</strong><br /><br /><ul><li data-list="bullet">Разрабатывать серверную часть плагинов на Python.</li><li data-list="bullet">Обрабатывать и анализировать данные (опыт с pandas обязателен).</li><li data-list="bullet">Участвовать в проектировании и разработке UI плагинов на JavaScript.</li><li data-list="bullet">Взаимодействовать с другими командами (редакторов, QA, аналитиков).</li></ul><br /><strong>Требования:</strong><br /><br /><ul><li data-list="bullet">Опыт коммерческой разработки на Python от 5 лет;</li><li data-list="bullet">Опыт работы с библиотеками: pandas (обязательно), а также Atropy, beautifulsoup4, imbalanced-learn, IPython, Gensim, Matplotlib, NetworkX, NumPy, Pillow, Pytable, PyWavelets, scikit-learn, SciPy, seaborn, snowballstemmer, statsmodels, SymPy, tabulate;</li><li data-list="bullet">Практический опыт с JavaScript (от 3 лет) для клиентской части плагинов;</li><li data-list="bullet">Понимание клиент-серверной архитектуры;</li><li data-list="bullet">Умение разбираться в чужом коде и писать читаемый код;</li><li data-list="bullet">Самостоятельность и готовность разбираться в задачах.</li></ul><br /><strong>Будет плюсом:</strong><br /><br /><ul><li data-list="bullet">Опыт работы с редакторами документов или схожими интерфейсами;</li><li data-list="bullet">Опыт в open-source проектах;</li><li data-list="bullet">Понимание принципов модульного тестирования.</li></ul><br /><strong>Условия:</strong><br /><br /><ul><li data-list="bullet">Оформление по ТК РФ;</li><li data-list="bullet">Возможность удаленного формата работы; если ты из Москвы — будем рады видеть тебя в офисе или в гибридном формате;</li><li data-list="bullet">ДМС со стоматологией после испытательного срока;</li><li data-list="bullet">Работа в быстрорастущей продуктовой компании, отсутствие бюрократии и дух стартапа;</li><li data-list="bullet">Предоставляем всё необходимое оборудование.</li></ul><br /><strong>Почему это предложение стоит рассмотреть:</strong><br /><br /><ul><li data-list="bullet">Вклад в технологический суверенитет — участие в создании отечественного облачного решения для корпоративных клиентов КС 2024;</li><li data-list="bullet">Развитие экспертизы — возможность стать экспертом в области офисных технологий;</li><li data-list="bullet">Команда единомышленников — никакой бюрократии, только профессионализм, открытость и миссия создавать важный для страны продукт;</li><li data-list="bullet">"Мы создаём не просто продукт — мы создаём будущее российских технологий."</li></ul></textarea>
+        </div>
+        
+        <div class="form-actions">
+            <button id="generateBtn" class="primary-button">Сгенерировать</button>
+        </div>
+
+        <div class="result-group">
+            <label for="resultCode">Готовый HTML-код</label>
+            <div class="result-container">
+                <textarea id="resultCode" rows="15" readonly placeholder="Здесь появится сгенерированный код..."></textarea>
+                <button id="copyBtn">Копировать</button>
+            </div>
+            <div id="copyMessage">Код скопирован в буфер обмена!</div>
+        </div>
+    </div>
+
+    <script>
+        // Встроенный JavaScript для логики приложения
+
+        // --- Элементы DOM ---
+        const jobTitleInput = document.getElementById('jobTitle');
+        const vacancyCountInput = document.getElementById('vacancyCount');
+        const jobDescriptionInput = document.getElementById('jobDescription');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultCodeTextarea = document.getElementById('resultCode');
+        const copyBtn = document.getElementById('copyBtn');
+        const copyMessage = document.getElementById('copyMessage');
+
+        // --- ID-плейсхолдеры для замены ---
+        const HEADER_ID_PLACEHOLDER = '6570311247'; // ID из примера
+        const BODY_ID_PLACEHOLDER = '6570164161';   // ID из примера
+
+        // --- Шаблоны с сохраненным форматированием ---
+        const headerTemplate = `      <!-- Новая вакансия {{JOB_TITLE}}. Начало -->
+      <div
+        id="rec${HEADER_ID_PLACEHOLDER}"
+        class="r t-rec {{ACCORDION_CLASS}}"
+        style=""
+        data-animationappear="off"
+        data-record-type="396"
+      >
+        <!-- T396 -->
+        <style>
+          #rec${HEADER_ID_PLACEHOLDER} .t396__artboard {
+            height: 80px;
+            background-color: #f8f8f8;
+          }
+          #rec${HEADER_ID_PLACEHOLDER} .t396__filter {
+            height: 80px;
+          }
+          #rec${HEADER_ID_PLACEHOLDER} .t396__carrier {
+            height: 80px;
+            background-position: center center;
+            background-attachment: scroll;
+            background-size: cover;
+            background-repeat: no-repeat;
+          }
+          @media screen and (max-width: 1199px) {
+            #rec${HEADER_ID_PLACEHOLDER} .t396__artboard,
+            #rec${HEADER_ID_PLACEHOLDER} .t396__filter,
+            #rec${HEADER_ID_PLACEHOLDER} .t396__carrier {
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .t396__filter {
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .t396__carrier {
+              background-attachment: scroll;
+            }
+          }
+          @media screen and (max-width: 959px) {
+            #rec${HEADER_ID_PLACEHOLDER} .t396__artboard,
+            #rec${HEADER_ID_PLACEHOLDER} .t396__filter,
+            #rec${HEADER_ID_PLACEHOLDER} .t396__carrier {
+              height: 66px;
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .t396__filter {
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .t396__carrier {
+              background-attachment: scroll;
+            }
+          }
+          @media screen and (max-width: 639px) {
+            #rec${HEADER_ID_PLACEHOLDER} .t396__artboard,
+            #rec${HEADER_ID_PLACEHOLDER} .t396__filter,
+            #rec${HEADER_ID_PLACEHOLDER} .t396__carrier {
+              height: 66px;
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .t396__filter {
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .t396__carrier {
+              background-attachment: scroll;
+            }
+          }
+          @media screen and (max-width: 479px) {
+            #rec${HEADER_ID_PLACEHOLDER} .t396__artboard,
+            #rec${HEADER_ID_PLACEHOLDER} .t396__filter,
+            #rec${HEADER_ID_PLACEHOLDER} .t396__carrier {
+              height: 66px;
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .t396__filter {
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .t396__carrier {
+              background-attachment: scroll;
+            }
+          }
+          #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717622978"] {
+            z-index: 2;
+            top: 1px;
+            left: calc(50% - 600px + 221px);
+            width: 760px;
+            height: 1px;
+          }
+          #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717622978"] .tn-atom {
+            background-color: #bcbcbc;
+            background-position: center center;
+            border-color: transparent;
+            border-style: solid;
+          }
+          @media screen and (max-width: 1199px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717622978"] {
+              top: 2px;
+              left: calc(50% - 480px + 90px);
+              width: 780px;
+            }
+          }
+          @media screen and (max-width: 959px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717622978"] {
+              left: calc(50% - 320px + 10px);
+              width: 620px;
+            }
+          }
+          @media screen and (max-width: 639px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717622978"] {
+              left: calc(50% - 240px + 10px);
+              width: 460px;
+            }
+          }
+          @media screen and (max-width: 479px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717622978"] {
+              left: calc(50% - 160px + 10px);
+              width: 300px;
+            }
+          }
+          #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] {
+            color: #333333;
+            z-index: 3;
+            top: 32px;
+            left: calc(50% - 600px + 221px);
+            width: 751px;
+            height: auto;
+          }
+          #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] .tn-atom {
+            color: #333333;
+            font-size: 19px;
+            font-family: "Roboto", Arial, sans-serif;
+            line-height: 1;
+            font-weight: 500;
+            background-position: center center;
+            border-color: transparent;
+            border-style: solid;
+          }
+          @media screen and (max-width: 1199px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] {
+              top: 32px;
+              left: calc(50% - 480px + 90px);
+              width: 780px;
+              height: auto;
+            }
+          }
+          @media screen and (max-width: 959px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] {
+              top: 24px;
+              left: calc(50% - 320px + 10px);
+              width: 620px;
+              height: auto;
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] .tn-atom {
+              white-space: normal;
+              font-size: 18px;
+              background-size: cover;
+            }
+          }
+          @media screen and (max-width: 639px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] {
+              top: 25px;
+              left: calc(50% - 240px + 10px);
+              width: 460px;
+              height: auto;
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] .tn-atom {
+              white-space: normal;
+              font-size: 16px;
+              background-size: cover;
+            }
+          }
+          @media screen and (max-width: 479px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] {
+              top: 25px;
+              left: calc(50% - 160px + 10px);
+              width: 256px;
+              height: auto;
+            }
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] .tn-atom {
+              white-space: normal;
+              font-size: 16px;
+              background-size: cover;
+            }
+          }
+          #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717789842"] {
+            z-index: 4;
+            top: 23px;
+            left: calc(50% - 600px + 936px);
+            width: 35px;
+            height: auto;
+          }
+          #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717789842"] .tn-atom {
+            background-position: center center;
+            border-color: transparent;
+            border-style: solid;
+          }
+          #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717789842"] .tn-atom__img {
+          }
+          @media screen and (max-width: 1199px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717789842"] {
+              top: 23px;
+              left: calc(50% - 480px + 836px);
+              height: auto;
+            }
+          }
+          @media screen and (max-width: 959px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717789842"] {
+              top: 16px;
+              left: calc(50% - 320px + 595px);
+              height: auto;
+            }
+          }
+          @media screen and (max-width: 639px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717789842"] {
+              top: 16px;
+              left: calc(50% - 240px + 435px);
+              height: auto;
+            }
+          }
+          @media screen and (max-width: 479px) {
+            #rec${HEADER_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717789842"] {
+              top: 21px;
+              left: calc(50% - 160px + 285px);
+              width: 25px;
+              height: auto;
+            }
+          }
+        </style>
+        <div class="t396">
+          <div
+            class="t396__artboard"
+            data-artboard-recid="${HEADER_ID_PLACEHOLDER}"
+            data-artboard-screens="320,480,640,960,1200"
+            data-artboard-height="80"
+            data-artboard-valign="center"
+            data-artboard-upscale="window"
+            data-artboard-height-res-320="66"
+            data-artboard-height-res-480="66"
+            data-artboard-height-res-640="66"
+          >
+            <div class="t396__carrier" data-artboard-recid="${HEADER_ID_PLACEHOLDER}"></div>
+            <div class="t396__filter" data-artboard-recid="${HEADER_ID_PLACEHOLDER}"></div>
+            <div
+              class="t396__elem tn-elem accord tn-elem__${HEADER_ID_PLACEHOLDER}1697717622978"
+              data-elem-id="1697717622978"
+              data-elem-type="shape"
+              data-field-top-value="1"
+              data-field-left-value="221"
+              data-field-height-value="1"
+              data-field-width-value="760"
+              data-field-axisy-value="top"
+              data-field-axisx-value="left"
+              data-field-container-value="grid"
+              data-field-topunits-value="px"
+              data-field-leftunits-value="px"
+              data-field-heightunits-value="px"
+              data-field-widthunits-value="px"
+              data-field-left-res-320-value="10"
+              data-field-width-res-320-value="300"
+              data-field-left-res-480-value="10"
+              data-field-width-res-480-value="460"
+              data-field-left-res-640-value="10"
+              data-field-width-res-640-value="620"
+              data-field-top-res-960-value="2"
+              data-field-left-res-960-value="90"
+              data-field-width-res-960-value="780"
+            >
+              <div class="tn-atom"></div>
+            </div>
+            <div
+              class="t396__elem tn-elem accord tn-elem__${HEADER_ID_PLACEHOLDER}1697717675393"
+              data-elem-id="1697717675393"
+              data-elem-type="text"
+              data-field-top-value="32"
+              data-field-left-value="221"
+              data-field-width-value="751"
+              data-field-axisy-value="top"
+              data-field-axisx-value="left"
+              data-field-container-value="grid"
+              data-field-topunits-value="px"
+              data-field-leftunits-value="px"
+              data-field-heightunits-value=""
+              data-field-widthunits-value="px"
+              data-field-top-res-320-value="25"
+              data-field-left-res-320-value="10"
+              data-field-width-res-320-value="256"
+              data-field-axisx-res-320-value="left"
+              data-field-top-res-480-value="25"
+              data-field-left-res-480-value="10"
+              data-field-width-res-480-value="460"
+              data-field-top-res-640-value="24"
+              data-field-left-res-640-value="10"
+              data-field-width-res-640-value="620"
+              data-field-top-res-960-value="32"
+              data-field-left-res-960-value="90"
+              data-field-width-res-960-value="780"
+            >
+              <div class="tn-atom" field="tn_text_1697717675393">
+                <strong>{{JOB_TITLE}}</strong>
+              </div>
+            </div>
+            <div
+              class="t396__elem tn-elem accord-icon tn-elem__${HEADER_ID_PLACEHOLDER}1697717789842"
+              data-elem-id="1697717789842"
+              data-elem-type="image"
+              data-field-top-value="23"
+              data-field-left-value="936"
+              data-field-width-value="35"
+              data-field-axisy-value="top"
+              data-field-axisx-value="left"
+              data-field-container-value="grid"
+              data-field-topunits-value="px"
+              data-field-leftunits-value="px"
+              data-field-heightunits-value=""
+              data-field-widthunits-value="px"
+              data-field-filewidth-value="40"
+              data-field-fileheight-value="40"
+              data-field-top-res-320-value="21"
+              data-field-left-res-320-value="285"
+              data-field-width-res-320-value="25"
+              data-field-top-res-480-value="16"
+              data-field-left-res-480-value="435"
+              data-field-top-res-640-value="16"
+              data-field-left-res-640-value="595"
+              data-field-top-res-960-value="23"
+              data-field-left-res-960-value="836"
+            >
+              <div class="tn-atom">
+                <img
+                  class="tn-atom__img t-img"
+                  data-original="/images/tild3661-3164-4232-b365-353864353834__svg_1.svg"
+                  alt=""
+                  imgfield="tn_img_1697717789842"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+          t_onFuncLoad("t396_initialScale", function () {
+            t396_initialScale("${HEADER_ID_PLACEHOLDER}");
+          });
+          t_onReady(function () {
+            t_onFuncLoad("t396_init", function () {
+              t396_init("${HEADER_ID_PLACEHOLDER}");
+            });
+          });
+        <\/script>
+        <!-- /T396 -->
+      </div>`;
+
+        const bodyTemplate = `      <div
+        id="rec${BODY_ID_PLACEHOLDER}"
+        class="r t-rec {{ACCORDION_CLASS}}"
+        style=""
+        data-animationappear="off"
+        data-record-type="396"
+      >
+        <!-- T396 -->
+        <style>
+          #rec${BODY_ID_PLACEHOLDER} .t396__artboard {
+            height: 1154px;
+            background-color: #f8f8f8;
+          }
+          #rec${BODY_ID_PLACEHOLDER} .t396__filter {
+            height: 1154px;
+          }
+          #rec${BODY_ID_PLACEHOLDER} .t396__carrier {
+            height: 1154px;
+            background-position: center center;
+            background-attachment: scroll;
+            background-size: cover;
+            background-repeat: no-repeat;
+          }
+          @media screen and (max-width: 1199px) {
+            #rec${BODY_ID_PLACEHOLDER} .t396__artboard,
+            #rec${BODY_ID_PLACEHOLDER} .t396__filter,
+            #rec${BODY_ID_PLACEHOLDER} .t396__carrier {
+              height: 1074px;
+            }
+            #rec${BODY_ID_PLACEHOLDER} .t396__filter {
+            }
+            #rec${BODY_ID_PLACEHOLDER} .t396__carrier {
+              background-attachment: scroll;
+            }
+          }
+          @media screen and (max-width: 959px) {
+            #rec${BODY_ID_PLACEHOLDER} .t396__artboard,
+            #rec${BODY_ID_PLACEHOLDER} .t396__filter,
+            #rec${BODY_ID_PLACEHOLDER} .t396__carrier {
+              height: 1296.5px;
+            }
+            #rec${BODY_ID_PLACEHOLDER} .t396__filter {
+            }
+            #rec${BODY_ID_PLACEHOLDER} .t396__carrier {
+              background-attachment: scroll;
+            }
+          }
+          @media screen and (max-width: 639px) {
+            #rec${BODY_ID_PLACEHOLDER} .t396__artboard,
+            #rec${BODY_ID_PLACEHOLDER} .t396__filter,
+            #rec${BODY_ID_PLACEHOLDER} .t396__carrier {
+              height: 1468.5px;
+            }
+            #rec${BODY_ID_PLACEHOLDER} .t396__filter {
+            }
+            #rec${BODY_ID_PLACEHOLDER} .t396__carrier {
+              background-attachment: scroll;
+            }
+          }
+          @media screen and (max-width: 479px) {
+            #rec${BODY_ID_PLACEHOLDER} .t396__artboard,
+            #rec${BODY_ID_PLACEHOLDER} .t396__filter,
+            #rec${BODY_ID_PLACEHOLDER} .t396__carrier {
+              height: 2072px;
+            }
+            #rec${BODY_ID_PLACEHOLDER} .t396__filter {
+            }
+            #rec${BODY_ID_PLACEHOLDER} .t396__carrier {
+              background-attachment: scroll;
+            }
+          }
+          #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] {
+            color: #333333;
+            z-index: 2;
+            top: 30px;
+            left: calc(50% - 600px + 220px);
+            width: 760px;
+            height: auto;
+          }
+          #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] .tn-atom {
+            color: #333333;
+            font-size: 15px;
+            font-family: "Roboto", Arial, sans-serif;
+            line-height: 1.25;
+            font-weight: 300;
+            background-position: center center;
+            border-color: transparent;
+            border-style: solid;
+          }
+          @media screen and (max-width: 1199px) {
+            #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] {
+              top: 30px;
+              left: calc(50% - 480px + 20px);
+              width: 940px;
+              height: auto;
+            }
+          }
+          @media screen and (max-width: 959px) {
+            #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] {
+              top: 25px;
+              left: calc(50% - 320px + 20px);
+              width: 600px;
+              height: auto;
+            }
+          }
+          @media screen and (max-width: 639px) {
+            #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] {
+              left: calc(50% - 240px + 20px);
+              width: 440px;
+              height: auto;
+            }
+            #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] .tn-atom {
+              white-space: normal;
+              font-size: 14px;
+              background-size: cover;
+            }
+          }
+          @media screen and (max-width: 479px) {
+            #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] {
+              left: calc(50% - 160px + 20px);
+              width: 280px;
+              height: auto;
+            }
+            #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697717675393"] .tn-atom {
+              white-space: normal;
+              font-size: 14px;
+              background-size: cover;
+            }
+          }
+          #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697718500361"] {
+            color: #ffffff;
+            text-align: center;
+            z-index: 3;
+            top: 1063px;
+            left: calc(50% - 600px + 220px);
+            width: 240px;
+            height: 50px;
+          }
+          #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697718500361"] .tn-atom {
+            color: #ffffff;
+            font-size: 12px;
+            font-family: "Roboto", Arial, sans-serif;
+            line-height: 1.55;
+            font-weight: 500;
+            border-radius: 30px;
+            background-color: #ed736f;
+            background-position: center center;
+            border-color: transparent;
+            border-style: solid;
+            transition: background-color 0.2s ease-in-out,
+              color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+          }
+          @media screen and (max-width: 1199px) {
+            #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697718500361"] {
+              top: 952px;
+              left: calc(50% - 480px + 22px);
+            }
+          }
+          @media screen and (max-width: 959px) {
+            #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697718500361"] {
+              top: 1166px;
+              left: calc(50% - 320px + 10px);
+              width: 230px;
+            }
+          }
+          @media screen and (max-width: 639px) {
+            #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697718500361"] {
+              top: 1350px;
+              left: calc(50% - 240px + 130px);
+              width: 220px;
+              height: 45px;
+            }
+          }
+          @media screen and (max-width: 479px) {
+            #rec${BODY_ID_PLACEHOLDER} .tn-elem[data-elem-id="1697718500361"] {
+              top: 1990px;
+              left: calc(50% - 160px + 50px);
+              width: 220px;
+              height: 50px;
+            }
+          }
+        </style>
+        <div class="t396">
+          <div
+            class="t396__artboard"
+            data-artboard-recid="${BODY_ID_PLACEHOLDER}"
+            data-artboard-screens="320,480,640,960,1200"
+            data-artboard-height="1000"
+            data-artboard-valign="center"
+            data-artboard-upscale="window"
+            data-artboard-height-res-320="1678"
+            data-artboard-height-res-480="1195"
+            data-artboard-height-res-640="1164"
+            data-artboard-height-res-960="960"
+          >
+            <div class="t396__carrier" data-artboard-recid="${BODY_ID_PLACEHOLDER}"></div>
+            <div class="t396__filter" data-artboard-recid="${BODY_ID_PLACEHOLDER}"></div>
+            <div
+              class="t396__elem tn-elem accord tn-elem__${BODY_ID_PLACEHOLDER}1697717675393"
+              data-elem-id="1697717675393"
+              data-elem-type="text"
+              data-field-top-value="30"
+              data-field-left-value="220"
+              data-field-width-value="760"
+              data-field-axisy-value="top"
+              data-field-axisx-value="left"
+              data-field-container-value="grid"
+              data-field-topunits-value="px"
+              data-field-leftunits-value="px"
+              data-field-heightunits-value=""
+              data-field-widthunits-value="px"
+              data-field-left-res-320-value="20"
+              data-field-width-res-320-value="280"
+              data-field-axisx-res-320-value="left"
+              data-field-container-res-320-value="grid"
+              data-field-left-res-480-value="20"
+              data-field-width-res-480-value="440"
+              data-field-top-res-640-value="25"
+              data-field-left-res-640-value="20"
+              data-field-width-res-640-value="600"
+              data-field-top-res-960-value="30"
+              data-field-left-res-960-value="20"
+              data-field-width-res-960-value="940"
+            >
+              <div class="tn-atom" field="tn_text_1697717675393">
+                {{JOB_DESCRIPTION}}
+              </div>
+            </div>
+            <div
+              class="t396__elem tn-elem tn-elem__${BODY_ID_PLACEHOLDER}1697718500361"
+              data-elem-id="1697718500361"
+              data-elem-type="button"
+              data-field-top-value="940"
+              data-field-left-value="220"
+              data-field-height-value="50"
+              data-field-width-value="240"
+              data-field-axisy-value="top"
+              data-field-axisx-value="left"
+              data-field-container-value="grid"
+              data-field-topunits-value="px"
+              data-field-leftunits-value="px"
+              data-field-heightunits-value="px"
+              data-field-widthunits-value="px"
+              data-field-top-res-320-value="1590"
+              data-field-left-res-320-value="50"
+              data-field-height-res-320-value="50"
+              data-field-width-res-320-value="220"
+              data-field-top-res-480-value="1140"
+              data-field-left-res-480-value="130"
+              data-field-height-res-480-value="45"
+              data-field-width-res-480-value="220"
+              data-field-top-res-640-value="1100"
+              data-field-left-res-640-value="10"
+              data-field-width-res-640-value="230"
+              data-field-top-res-960-value="890"
+              data-field-left-res-960-value="22"
+            >
+              <a class="tn-atom" href="#popup:myform"
+                >ОТКЛИКНУТЬСЯ НА ВАКАНСИЮ</a
+              >
+            </div>
+          </div>
+        </div>
+        <script>
+          t_onFuncLoad("t396_initialScale", function () {
+            t396_initialScale("${BODY_ID_PLACEHOLDER}");
+          });
+          t_onReady(function () {
+            t_onFuncLoad("t396_init", function () {
+              t396_init("${BODY_ID_PLACEHOLDER}");
+            });
+          });
+        <\/script>
+        <!-- /T396 -->
+      </div>
+      <!-- Новая вакансия {{JOB_TITLE}}. Конец -->`;
+
+        // --- Логика приложения ---
+        generateBtn.addEventListener('click', function() {
+            const jobTitle = jobTitleInput.value.trim();
+            const vacancyCount = vacancyCountInput.value;
+            const jobDescription = jobDescriptionInput.value;
+
+            if (!jobTitle || !vacancyCount || !jobDescription) {
+                alert('Пожалуйста, заполните все поля.');
+                return;
+            }
+
+            const timestamp = Date.now();
+            const newHeaderId = String(timestamp).slice(-10);
+            const newBodyId = String(timestamp + 1).slice(-10); 
+
+            const newAccordionClass = `uc-accord-a-${vacancyCount}`;
+
+            let finalHeaderCode = headerTemplate
+                .replaceAll(HEADER_ID_PLACEHOLDER, newHeaderId)
+                .replaceAll('{{JOB_TITLE}}', jobTitle)
+                .replaceAll('{{ACCORDION_CLASS}}', newAccordionClass);
+
+            let finalBodyCode = bodyTemplate
+                .replaceAll(BODY_ID_PLACEHOLDER, newBodyId)
+                .replaceAll('{{JOB_DESCRIPTION}}', jobDescription)
+                .replaceAll('{{JOB_TITLE}}', jobTitle)
+                .replaceAll('{{ACCORDION_CLASS}}', newAccordionClass);
+            
+            // ИСПРАВЛЕНО: Теперь соединяются обработанные шаблоны
+            const finalHtml = finalHeaderCode + '\n' + finalBodyCode; 
+            resultCodeTextarea.value = finalHtml;
+
+            if (resultCodeTextarea.value) {
+                copyBtn.style.display = 'block';
+            }
+        });
+
+        copyBtn.addEventListener('click', function() {
+            resultCodeTextarea.select();
+            document.execCommand('copy');
+            
+            copyMessage.style.display = 'block';
+            copyBtn.textContent = 'Скопировано!';
+            setTimeout(() => {
+                copyMessage.style.display = 'none';
+                copyBtn.textContent = 'Копировать';
+            }, 2000);
+        });
+
+    </script>
+</body>
+</html>
