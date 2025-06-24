@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <!-- Генератор Новостей v.2.2 (метод плейсхолдеров) -->
+    <!-- Генератор Новостей v.3.0 -->
     <meta charset="UTF-8">
     <title>Генератор Новостей</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,8 +27,8 @@
             <form id="news-form" class="space-y-6">
                 <!-- Поля для ввода данных -->
                 <div>
-                    <label for="page_url" class="block text-sm font-medium text-gray-700 mb-1">Ссылка на новость (для имени файла)</label>
-                    <input type="url" id="page_url" name="page_url" required placeholder="https://example.com/news/..." class="block w-full px-4 py-3 bg-gray-100 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                    <label for="page_url" class="block text-sm font-medium text-gray-700 mb-1">Ссылка на новость (для имени файла и URL)</label>
+                    <input type="url" id="page_url" name="page_url" required placeholder="https://r7-office.ru/news/tpost/..." class="block w-full px-4 py-3 bg-gray-100 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -55,7 +55,8 @@
                 <!-- Поле для вставки шаблона -->
                 <div>
                     <label for="template-container" class="block text-sm font-medium text-gray-700 mb-1">Ваш HTML-шаблон с плейсхолдерами</label>
-                    <textarea id="template-container" class="block w-full px-4 py-3 bg-gray-900 text-green-400 font-mono text-xs border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Вставьте сюда код вашего шаблона с плейсхолдерами (например, {{TITLE}}, {{NEWS_CONTENT}} и т.д.)"><!DOCTYPE html>
+                    <textarea id="template-container" class="block w-full px-4 py-3 bg-gray-900 text-green-400 font-mono text-xs border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Вставьте сюда код вашего шаблона с плейсхолдерами...">
+<!DOCTYPE html>
 <html lang="ru">
 
 <head>
@@ -66,11 +67,11 @@
     <meta name="description" content="{{DESCRIPTION}}" />
     <meta name="keywords"
         content="Р7-Офис,новости,события,российский офис,офисный пакет,работа с документами,текстовый редактор,редактор документов,редактор электронных таблиц,редактор презентаций,средства просмотра изображений,средства просмотра видео,совместная работа,документооборот" />
-    <meta property="og:url" content="https://r7-office.ru/news" />
+    <meta property="og:url" content="{{URL}}" />
     <meta property="og:title" content="{{TITLE}}" />
     <meta property="og:description" content="{{DESCRIPTION}}" />
     <meta property="og:type" content="website" />
-    <link rel="canonical" href="hhttps://r7-office.ru/news"> <!--/metatextblock-->
+    <link rel="canonical" href="{{URL}}"> <!--/metatextblock-->
     <meta name="format-detection" content="telephone=no" />
     <meta http-equiv="x-dns-prefetch-control" content="on">
     <link rel="dns-prefetch" href="https://ws.tildacdn.com">
@@ -25362,7 +25363,8 @@
     <!-- //Rating Mail.ru counter -->
 </body>
 
-</html></textarea>
+</html>
+</textarea>
                 </div>
                 
                 <div>
@@ -25392,9 +25394,30 @@
                 return;
             }
             
-            // 3. Подготовка контента
+            // 3. Подготовка имени файла и полного URL
+            let fileName = 'news.html';
+            let fileBaseName = 'news';
+             if (pageUrl) {
+                try {
+                    const url = new URL(pageUrl);
+                    const pathParts = url.pathname.split('/').filter(p => p);
+                    if (pathParts.length > 0) {
+                        fileBaseName = pathParts[pathParts.length - 1];
+                        fileName = fileBaseName + '.html';
+                    }
+                } catch (e) {
+                    console.error("Неверный URL страницы, используется fallback:", e);
+                    const pathParts = pageUrl.split('/').filter(p => p);
+                     if (pathParts.length > 0) {
+                         fileBaseName = pathParts[pathParts.length - 1].split('?')[0];
+                         fileName = fileBaseName + '.html';
+                    }
+                }
+            }
+            const fullNewsUrl = 'https://r7-office.ru/news/tpost/' + fileBaseName;
             
-            // Имя файла изображения
+
+            // 4. Подготовка остального контента
             let imageName = '';
             try {
                 const url = new URL(imageUrl);
@@ -25405,7 +25428,6 @@
             }
             const finalImageSrc = `../images/news/${imageName}`;
 
-            // Форматирование текста новости
             const paragraphs = newsText.trim().split(/\r?\n/).map(p => p.trim()).filter(p => p);
             let newsContentHTML = '';
             let firstParagraphText = '';
@@ -25417,32 +25439,15 @@
                 }
             }
             
-            // 4. Замена плейсхолдеров в шаблоне (простая замена строк)
+            // 5. Замена плейсхолдеров
             let finalHtml = templateHTML
+                .replace(/{{URL}}/g, fullNewsUrl)
                 .replace(/{{TITLE}}/g, titleStr)
                 .replace(/{{H2_TITLE}}/g, titleStr)
                 .replace(/{{DESCRIPTION}}/g, firstParagraphText)
                 .replace(/{{NEWS_DATE}}/g, dateStr)
                 .replace(/{{IMAGE_SRC}}/g, finalImageSrc)
                 .replace(/{{NEWS_CONTENT}}/g, newsContentHTML);
-
-            // 5. Генерация имени файла
-            let fileName = 'news.html';
-            if (pageUrl) {
-                try {
-                    const url = new URL(pageUrl);
-                    const pathParts = url.pathname.split('/').filter(p => p);
-                    if (pathParts.length > 0) {
-                        fileName = pathParts[pathParts.length - 1] + '.html';
-                    }
-                } catch (e) {
-                    console.error("Неверный URL страницы, используется fallback:", e);
-                    const pathParts = pageUrl.split('/').filter(p => p);
-                     if (pathParts.length > 0) {
-                         fileName = pathParts[pathParts.length - 1].split('?')[0] + '.html';
-                    }
-                }
-            }
 
             // 6. Создание и скачивание файла
             const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
