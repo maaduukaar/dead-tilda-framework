@@ -63,13 +63,13 @@
                 
                 <!-- Поле для кода страницы /news -->
                 <div>
-                    <label for="news-page-template" class="block text-sm font-medium text-gray-700 mb-1">Код страницы /news (с комментарием)</label>
+                    <label for="news-page-template" class="block text-sm font-medium text-gray-700 mb-1">Код страницы /news</label>
                     <textarea id="news-page-template" class="block w-full px-4 py-3 bg-gray-900 text-green-400 font-mono text-xs border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Вставьте сюда код страницы /news с комментариями..."></textarea>
                 </div>
                 
                 <!-- Поле для кода главной страницы -->
                 <div>
-                    <label for="main-page-template" class="block text-sm font-medium text-gray-700 mb-1">Код главной страницы (с комментарием)</label>
+                    <label for="main-page-template" class="block text-sm font-medium text-gray-700 mb-1">Код главной страницы</label>
                     <textarea id="main-page-template" class="block w-full px-4 py-3 bg-gray-900 text-green-400 font-mono text-xs border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Вставьте сюда код главной страницы с комментариями..."></textarea>
                 </div>
                 
@@ -308,27 +308,20 @@
                     .replace(/{{NEWS_DATE}}/g, dateStr)
                     .replace(/{{IMAGE_SRC}}/g, finalImageSrc);
                 
-                // Используем DOM для вставки новости
-                const tempNewsDoc = document.implementation.createHTMLDocument();
-                tempNewsDoc.body.innerHTML = newsPageTemplate;
+                // Вместо DOM-манипуляций используем работу с текстом
+                let newsPageHTML = newsPageTemplate;
                 
-                // Находим контейнер новостей по селектору
-                const newsContainer = tempNewsDoc.querySelector('.js-feed-container.t-feed__container');
+                // Ищем контейнер с новостями
+                const containerPattern = /<ul[^>]*class="[^"]*js-feed-container[^"]*t-feed__container[^"]*"[^>]*>/i;
+                const match = newsPageHTML.match(containerPattern);
                 
-                if (newsContainer) {
-                    // Создаем элемент для новости
-                    const newNewsItem = tempNewsDoc.createElement('div');
-                    newNewsItem.innerHTML = filledNewsItem.trim();
-                    
-                    // Вставляем в начало списка
-                    if (newsContainer.firstChild) {
-                        newsContainer.insertBefore(newNewsItem.firstElementChild, newsContainer.firstChild);
-                    } else {
-                        newsContainer.appendChild(newNewsItem.firstElementChild);
-                    }
-                    
-                    // Получаем обновленный HTML
-                    const newsPageHTML = tempNewsDoc.body.innerHTML;
+                if (match && match.index !== -1) {
+                    const position = match.index + match[0].length;
+                    // Вставляем новость в начало контейнера
+                    newsPageHTML = 
+                        newsPageHTML.substring(0, position) + 
+                        filledNewsItem + 
+                        newsPageHTML.substring(position);
                     
                     // Создаем и скачиваем файл страницы новостей
                     const newsPageBlob = new Blob([newsPageHTML], { type: 'text/html;charset=utf-8' });
@@ -371,39 +364,46 @@
                     .replace(/{{FIRST_PARAGRAPH}}/g, firstParagraphText)
                     .replace(/{{NEWS_DATE}}/g, dateStr)
                     .replace(/{{IMAGE_SRC}}/g, finalImageSrc);
-
-                // Создаем временный DOM-элемент для работы с шаблоном
-                const tempDoc = document.implementation.createHTMLDocument();
-                tempDoc.body.innerHTML = mainPageTemplate;
-
-                // Находим блок новостей
-                const newsUlBlock = tempDoc.querySelector('ul.news1__ul');
-
-                if (newsUlBlock) {
-                    // Находим все карточки новостей
-                    const newsItems = newsUlBlock.querySelectorAll('li.news1__li');
+                
+                // Вместо DOM-манипуляций используем работу с текстом
+                let mainPageHTML = mainPageTemplate;
+                
+                // Ищем блок ul.news1__ul
+                const ulPattern = /<ul[^>]*class="[^"]*news1__ul[^"]*"[^>]*>/i;
+                const ulMatch = mainPageHTML.match(ulPattern);
+                
+                if (ulMatch && ulMatch.index !== -1) {
+                    const ulPosition = ulMatch.index + ulMatch[0].length;
                     
-                    // Удаляем вторую карточку, если она есть
-                    if (newsItems.length >= 2) {
-                        newsItems[1].remove();
+                    // Ищем второй элемент li, чтобы удалить его
+                    const secondLiPattern = /<li[^>]*class="[^"]*news1__li[^"]*"[^>]*>[\s\S]*?<\/li>/gi;
+                    let liMatches = [];
+                    let liMatch;
+                    while ((liMatch = secondLiPattern.exec(mainPageHTML)) !== null) {
+                        liMatches.push({ index: liMatch.index, length: liMatch[0].length });
                     }
                     
-                    // Создаем новую карточку
-                    const newCardTemp = tempDoc.createElement('div');
-                    newCardTemp.innerHTML = filledMainPageNewsItem.trim();
-                    
-                    // Вставляем новую карточку перед первой
-                    if (newsItems.length > 0) {
-                        newsUlBlock.insertBefore(newCardTemp.firstElementChild, newsItems[0]);
+                    // Если нашли хотя бы два элемента
+                    if (liMatches.length >= 2) {
+                        // Удаляем второй элемент и вставляем новый в начало
+                        const secondLiStart = liMatches[1].index;
+                        const secondLiEnd = secondLiStart + liMatches[1].length;
+                        
+                        mainPageHTML = 
+                            mainPageHTML.substring(0, ulPosition) + // Начало до первого li
+                            '\n' + filledMainPageNewsItem + '\n' + // Вставляем новую новость
+                            mainPageHTML.substring(ulPosition, secondLiStart) + // Сохраняем первый li
+                            mainPageHTML.substring(secondLiEnd); // Пропускаем второй li
                     } else {
-                        newsUlBlock.innerHTML += filledMainPageNewsItem;
+                        // Если нет второго элемента, просто вставляем в начало
+                        mainPageHTML = 
+                            mainPageHTML.substring(0, ulPosition) + 
+                            '\n' + filledMainPageNewsItem + '\n' + 
+                            mainPageHTML.substring(ulPosition);
                     }
-                    
-                    // Получаем обновленный HTML
-                    const updatedMainPageHTML = tempDoc.body.innerHTML;
                     
                     // Создаем и скачиваем файл главной страницы
-                    const mainPageBlob = new Blob([updatedMainPageHTML], { type: 'text/html;charset=utf-8' });
+                    const mainPageBlob = new Blob([mainPageHTML], { type: 'text/html;charset=utf-8' });
                     const mainPageLink = document.createElement('a');
                     mainPageLink.href = URL.createObjectURL(mainPageBlob);
                     mainPageLink.download = 'page53301905.html';
