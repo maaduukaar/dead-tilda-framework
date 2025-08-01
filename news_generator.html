@@ -63,13 +63,13 @@
                 
                 <!-- Поле для кода страницы /news -->
                 <div>
-                    <label for="news-page-template" class="block text-sm font-medium text-gray-700 mb-1">Код страницы /news (с комментариями)</label>
+                    <label for="news-page-template" class="block text-sm font-medium text-gray-700 mb-1">Код страницы /news (с комментарием)</label>
                     <textarea id="news-page-template" class="block w-full px-4 py-3 bg-gray-900 text-green-400 font-mono text-xs border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Вставьте сюда код страницы /news с комментариями..."></textarea>
                 </div>
                 
                 <!-- Поле для кода главной страницы -->
                 <div>
-                    <label for="main-page-template" class="block text-sm font-medium text-gray-700 mb-1">Код главной страницы (с комментариями)</label>
+                    <label for="main-page-template" class="block text-sm font-medium text-gray-700 mb-1">Код главной страницы (с комментарием)</label>
                     <textarea id="main-page-template" class="block w-full px-4 py-3 bg-gray-900 text-green-400 font-mono text-xs border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Вставьте сюда код главной страницы с комментариями..."></textarea>
                 </div>
                 
@@ -325,6 +325,78 @@
                     newsPageLink.click();
                     document.body.removeChild(newsPageLink);
                     URL.revokeObjectURL(newsPageLink.href);
+                }
+            }
+
+            // Обработка шаблона главной страницы
+            if (mainPageTemplate.trim() !== '') {
+                // Шаблон для вставки новой новости на главную страницу
+                const mainPageNewsItemTemplate = `
+                    <!-- Карточка новости. Начало -->
+                    <li class="news1__li">
+                        <!-- Ссылка на страницу новости -->
+                        <a class="news1__b" href="{{URL}}" target="_blank">
+                            <!-- Картинка -->
+                            <span class="news1__img" style="background-image: url({{IMAGE_SRC}})"></span>
+                            <span class="news1__b1">
+                                <!-- Заголовок новости -->
+                                <span class="news1__h3">{{TITLE}}</span>
+                                <!-- Текст новости -->
+                                <span class="news1__txt">{{FIRST_PARAGRAPH}}</span>
+                                <!-- Дата новости -->
+                                <span class="news1__date">{{NEWS_DATE}}</span>
+                            </span>
+                        </a>
+                    </li>
+                    <!-- Карточка новости. Конец -->`;
+
+                // Заменяем плейсхолдеры в шаблоне новости
+                const filledMainPageNewsItem = mainPageNewsItemTemplate
+                    .replace(/{{URL}}/g, fullNewsUrl)
+                    .replace(/{{TITLE}}/g, titleStr)
+                    .replace(/{{FIRST_PARAGRAPH}}/g, firstParagraphText)
+                    .replace(/{{NEWS_DATE}}/g, dateStr)
+                    .replace(/{{IMAGE_SRC}}/g, finalImageSrc);
+
+                // Создаем временный DOM-элемент для работы с шаблоном
+                const tempDoc = document.implementation.createHTMLDocument();
+                tempDoc.body.innerHTML = mainPageTemplate;
+
+                // Находим блок новостей
+                const newsUlBlock = tempDoc.querySelector('ul.news1__ul');
+
+                if (newsUlBlock) {
+                    // Находим все карточки новостей
+                    const newsItems = newsUlBlock.querySelectorAll('li.news1__li');
+                    
+                    // Удаляем вторую карточку, если она есть
+                    if (newsItems.length >= 2) {
+                        newsItems[1].remove();
+                    }
+                    
+                    // Создаем новую карточку
+                    const newCardTemp = tempDoc.createElement('div');
+                    newCardTemp.innerHTML = filledMainPageNewsItem.trim();
+                    
+                    // Вставляем новую карточку перед первой
+                    if (newsItems.length > 0) {
+                        newsUlBlock.insertBefore(newCardTemp.firstElementChild, newsItems[0]);
+                    } else {
+                        newsUlBlock.innerHTML += filledMainPageNewsItem;
+                    }
+                    
+                    // Получаем обновленный HTML
+                    const updatedMainPageHTML = tempDoc.body.innerHTML;
+                    
+                    // Создаем и скачиваем файл главной страницы
+                    const mainPageBlob = new Blob([updatedMainPageHTML], { type: 'text/html;charset=utf-8' });
+                    const mainPageLink = document.createElement('a');
+                    mainPageLink.href = URL.createObjectURL(mainPageBlob);
+                    mainPageLink.download = 'index.html';
+                    document.body.appendChild(mainPageLink);
+                    mainPageLink.click();
+                    document.body.removeChild(mainPageLink);
+                    URL.revokeObjectURL(mainPageLink.href);
                 }
             }
 
