@@ -232,89 +232,103 @@
 
             // Обработка шаблона страницы /news
             if (newsPageTemplate.trim() !== '') {
-                // Шаблон для вставки новой новости
+                // Шаблон для вставки новой новости 
+                // комментарии в начале и конце не добавляются из-за того,
+                // что вставка происходит с помощью DOM
                 const newsItemTemplate = `
-              <!-- Место для новой новости. Скрипт -->
-
-              <!-- {{TITLE}} {{NEWS_DATE}}. Начало-->
-              <li
-                class="js-feed-post t-feed__post t-item t-width t-feed__grid-col t-col t-col_4 t-align_left"
-                data-post-uid="89nmunc9v1"
-              >
-                  <div class="t-feed__col-grid__post-wrapper">
-                    <div
-                      class="t-feed__post-imgwrapper t-feed__post-imgwrapper_beforetitle"
-                      style="aspect-ratio: 1.8"
-                    >
-                      <div class="t-feed__post-label-wrapper"></div>
-                      <div
-                        class="t-feed__post-bgimg t-bgimg loaded"
-                        bgimgfield="fe_img__89nmunc9v1"
-                        data-original="{{IMAGE_SRC}}"
-                        style="
-                          background-image: url('{{IMAGE_SRC}}');
-                        "
-                        src=""
-                      ></div>
-                    </div>
-                    <div
-                      class="t-feed__col-grid__wrapper t-feed__col-grid__wrapper_align"
-                    >
-                      <div
-                        class="t-feed__post-parts-date-row t-feed__post-parts-date-row_beforetitle"
-                      >
-                        <!--Дата-->
-                        <span
-                          class="js-feed-post-date t-feed__post-date t-uptitle t-uptitle_xs"
-                          >{{NEWS_DATE}}</span
-                        >
-                      </div>
-                      <div class="t-feed__textwrapper">
+                <!-- {{TITLE}} {{NEWS_DATE}}. Начало-->
+                <li
+                    class="js-feed-post t-feed__post t-item t-width t-feed__grid-col t-col t-col_4 t-align_left"
+                    data-post-uid="89nmunc9v1"
+                >
+                    <div class="t-feed__col-grid__post-wrapper">
                         <div
-                          class="js-feed-post-title t-feed__post-title t-name t-name_md"
-                          field="fe_title__89nmunc9v1"
-                          data-redactor-toolbar="no"
+                        class="t-feed__post-imgwrapper t-feed__post-imgwrapper_beforetitle"
+                        style="aspect-ratio: 1.8"
                         >
-                        <a
-                          href="{{URL}}"
-                          class="t-feed__link js-feed-post-link"
-                          role="button"
-                          aria-haspopup="dialog"
-                          target="_blank"
-                        >
-                          {{H2_TITLE}}
-                        </a>
-                        </div>
-                        <!--Текст новости-->
+                        <div class="t-feed__post-label-wrapper"></div>
                         <div
-                          class="js-feed__post-descr t-feed__post-descr t-descr t-descr_xxs"
-                          field="fe_descr__89nmunc9v1"
-                          data-redactor-toolbar="no"
-                        >
-                          {{FIRST_PARAGRAPH}}
+                            class="t-feed__post-bgimg t-bgimg loaded"
+                            bgimgfield="fe_img__89nmunc9v1"
+                            data-original="{{IMAGE_SRC}}"
+                            style="
+                            background-image: url('{{IMAGE_SRC}}');
+                            "
+                            src=""
+                        ></div>
                         </div>
-                      </div>
+                        <div
+                        class="t-feed__col-grid__wrapper t-feed__col-grid__wrapper_align"
+                        >
+                        <div
+                            class="t-feed__post-parts-date-row t-feed__post-parts-date-row_beforetitle"
+                        >
+                            <!--Дата-->
+                            <span
+                            class="js-feed-post-date t-feed__post-date t-uptitle t-uptitle_xs"
+                            >{{NEWS_DATE}}</span
+                            >
+                        </div>
+                        <div class="t-feed__textwrapper">
+                            <div
+                            class="js-feed-post-title t-feed__post-title t-name t-name_md"
+                            field="fe_title__89nmunc9v1"
+                            data-redactor-toolbar="no"
+                            >
+                            <a
+                            href="{{URL}}"
+                            class="t-feed__link js-feed-post-link"
+                            role="button"
+                            aria-haspopup="dialog"
+                            target="_blank"
+                            >
+                            {{H2_TITLE}}
+                            </a>
+                            </div>
+                            <!--Текст новости-->
+                            <div
+                            class="js-feed__post-descr t-feed__post-descr t-descr t-descr_xxs"
+                            field="fe_descr__89nmunc9v1"
+                            data-redactor-toolbar="no"
+                            >
+                            {{FIRST_PARAGRAPH}}
+                            </div>
+                        </div>
+                        </div>
                     </div>
-                  </div>
-              </li>
-              <!-- {{TITLE}} {{NEWS_DATE}} -->`;
+                </li>
+                <!-- {{TITLE}} {{NEWS_DATE}} -->`;
 
-                // Находим место для вставки новости и заменяем его
-                let newsPageHTML = newsPageTemplate;
-                const insertMarker = "<!-- Место для новой новости. Скрипт -->";
+                // Заменяем плейсхолдеры в шаблоне новости
+                const filledNewsItem = newsItemTemplate
+                    .replace(/{{URL}}/g, fullNewsUrl)
+                    .replace(/{{TITLE}}/g, titleStr)
+                    .replace(/{{H2_TITLE}}/g, titleStr)
+                    .replace(/{{FIRST_PARAGRAPH}}/g, firstParagraphText)
+                    .replace(/{{NEWS_DATE}}/g, dateStr)
+                    .replace(/{{IMAGE_SRC}}/g, finalImageSrc);
                 
-                if (newsPageHTML.includes(insertMarker)) {
-                    // Заменяем плейсхолдеры в шаблоне новости
-                    const filledNewsItem = newsItemTemplate
-                        .replace(/{{URL}}/g, fullNewsUrl)
-                        .replace(/{{TITLE}}/g, titleStr)
-                        .replace(/{{H2_TITLE}}/g, titleStr)
-                        .replace(/{{FIRST_PARAGRAPH}}/g, firstParagraphText)
-                        .replace(/{{NEWS_DATE}}/g, dateStr)
-                        .replace(/{{IMAGE_SRC}}/g, finalImageSrc);
+                // Используем DOM для вставки новости
+                const tempNewsDoc = document.implementation.createHTMLDocument();
+                tempNewsDoc.body.innerHTML = newsPageTemplate;
+                
+                // Находим контейнер новостей по селектору
+                const newsContainer = tempNewsDoc.querySelector('.js-feed-container.t-feed__container');
+                
+                if (newsContainer) {
+                    // Создаем элемент для новости
+                    const newNewsItem = tempNewsDoc.createElement('div');
+                    newNewsItem.innerHTML = filledNewsItem.trim();
                     
-                    // Заменяем маркер вставки на новую новость
-                    newsPageHTML = newsPageHTML.replace(insertMarker, filledNewsItem);
+                    // Вставляем в начало списка
+                    if (newsContainer.firstChild) {
+                        newsContainer.insertBefore(newNewsItem.firstElementChild, newsContainer.firstChild);
+                    } else {
+                        newsContainer.appendChild(newNewsItem.firstElementChild);
+                    }
+                    
+                    // Получаем обновленный HTML
+                    const newsPageHTML = tempNewsDoc.body.innerHTML;
                     
                     // Создаем и скачиваем файл страницы новостей
                     const newsPageBlob = new Blob([newsPageHTML], { type: 'text/html;charset=utf-8' });
