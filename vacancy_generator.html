@@ -149,8 +149,8 @@
         </div>
 
         <div class="form-group">
-            <label for="jobDescription">Описание вакансии (в формате HTML)</label>
-            <textarea id="jobDescription" rows="10" placeholder="Вставьте сюда HTML-код описания..."><strong>Описание вакансии:</strong><br /><br /><p>Мы ищем Python-разработчика, который присоединится к команде, разрабатывающей плагины для нашего редактора документов. Это работа на стыке серверного бэкенда и клиентского интерфейса, с упором на Python и возможностью использовать JavaScript для UI-компонентов.</p><br /><br /><strong>Обязанности:</strong><br /><br /><ul><li data-list="bullet">Разрабатывать серверную часть плагинов на Python.</li><li data-list="bullet">Обрабатывать и анализировать данные (опыт с pandas обязателен).</li><li data-list="bullet">Участвовать в проектировании и разработке UI плагинов на JavaScript.</li><li data-list="bullet">Взаимодействовать с другими командами (редакторов, QA, аналитиков).</li></ul><br /><strong>Требования:</strong><br /><br /><ul><li data-list="bullet">Опыт коммерческой разработки на Python от 5 лет;</li><li data-list="bullet">Опыт работы с библиотеками: pandas (обязательно), а также Atropy, beautifulsoup4, imbalanced-learn, IPython, Gensim, Matplotlib, NetworkX, NumPy, Pillow, Pytable, PyWavelets, scikit-learn, SciPy, seaborn, snowballstemmer, statsmodels, SymPy, tabulate;</li><li data-list="bullet">Практический опыт с JavaScript (от 3 лет) для клиентской части плагинов;</li><li data-list="bullet">Понимание клиент-серверной архитектуры;</li><li data-list="bullet">Умение разбираться в чужом коде и писать читаемый код;</li><li data-list="bullet">Самостоятельность и готовность разбираться в задачах.</li></ul><br /><strong>Будет плюсом:</strong><br /><br /><ul><li data-list="bullet">Опыт работы с редакторами документов или схожими интерфейсами;</li><li data-list="bullet">Опыт в open-source проектах;</li><li data-list="bullet">Понимание принципов модульного тестирования.</li></ul><br /><strong>Условия:</strong><br /><br /><ul><li data-list="bullet">Оформление по ТК РФ;</li><li data-list="bullet">Возможность удаленного формата работы; если ты из Москвы — будем рады видеть тебя в офисе или в гибридном формате;</li><li data-list="bullet">ДМС со стоматологией после испытательного срока;</li><li data-list="bullet">Работа в быстрорастущей продуктовой компании, отсутствие бюрократии и дух стартапа;</li><li data-list="bullet">Предоставляем всё необходимое оборудование.</li></ul><br /><strong>Почему это предложение стоит рассмотреть:</strong><br /><br /><ul><li data-list="bullet">Вклад в технологический суверенитет — участие в создании отечественного облачного решения для корпоративных клиентов КС 2024;</li><li data-list="bullet">Развитие экспертизы — возможность стать экспертом в области офисных технологий;</li><li data-list="bullet">Команда единомышленников — никакой бюрократии, только профессионализм, открытость и миссия создавать важный для страны продукт;</li><li data-list="bullet">"Мы создаём не просто продукт — мы создаём будущее российских технологий."</li></ul></textarea>
+            <label for="jobDescription">Описание вакансии</label>
+            <textarea id="jobDescription" rows="10" placeholder="Вставьте обычный текст. Заголовки должны начинаться с большой буквы и заканчиваться двоеточием (например: Обязанности:, Требования:). Генератор автоматически преобразует текст в HTML."></textarea>
         </div>
         
         <div class="form-actions">
@@ -802,16 +802,109 @@
       </div>
       <!-- Новая вакансия {{JOB_TITLE}}. Конец -->`;
 
+        // --- Функция форматирования текста в HTML ---
+        function formatTextToHTML(text) {
+            // Если текст уже содержит HTML-теги, возвращаем как есть
+            if (text.includes('<strong>') || text.includes('<ul>') || text.includes('<li>')) {
+                return text;
+            }
+
+            const lines = text.split('\n');
+            let html = '';
+            let currentList = [];
+            let inList = false;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+
+                // Пропускаем пустые строки
+                if (!line) {
+                    // Если были накопленные пункты списка, закрываем список
+                    if (inList && currentList.length > 0) {
+                        html += '<ul>\n';
+                        currentList.forEach(item => {
+                            html += '    <li>' + item + '</li>\n';
+                        });
+                        html += '</ul>\n';
+                        currentList = [];
+                        inList = false;
+                    }
+                    continue;
+                }
+
+                // Проверяем, является ли строка основным заголовком (начинается с большой буквы и заканчивается двоеточием)
+                if (/^[А-ЯA-Z]/.test(line) && line.endsWith(':')) {
+                    // Закрываем предыдущий список, если был открыт
+                    if (inList && currentList.length > 0) {
+                        html += '<ul>\n';
+                        currentList.forEach(item => {
+                            html += '    <li>' + item + '</li>\n';
+                        });
+                        html += '</ul>\n';
+                        currentList = [];
+                        inList = false;
+                    }
+
+                    // Добавляем основной заголовок
+                    if (html) html += '<br />';
+                    html += '<strong>' + line + '</strong><br /><br />\n';
+                    inList = true; // Теперь ожидаем пункты списка или подзаголовки
+                    continue;
+                }
+
+                // Проверяем, является ли строка нумерованным подзаголовком (например: "1. Развитие и поддержка")
+                if (/^\d+\.\s+[А-ЯA-Z]/.test(line)) {
+                    // Закрываем предыдущий список, если был открыт
+                    if (inList && currentList.length > 0) {
+                        html += '<ul>\n';
+                        currentList.forEach(item => {
+                            html += '    <li>' + item + '</li>\n';
+                        });
+                        html += '</ul>\n\n';
+                        currentList = [];
+                    }
+
+                    // Добавляем подзаголовок
+                    html += '<strong>' + line + '</strong><br />\n';
+                    inList = true;
+                    continue;
+                }
+
+                // Все остальные непустые строки — это пункты списка
+                if (inList) {
+                    // Убираем маркеры · и лишние пробелы в начале
+                    let cleanedLine = line.replace(/^[·•]\s*/, '').trim();
+                    if (cleanedLine) {
+                        currentList.push(cleanedLine);
+                    }
+                }
+            }
+
+            // Закрываем последний список, если остался открытым
+            if (inList && currentList.length > 0) {
+                html += '<ul>\n';
+                currentList.forEach(item => {
+                    html += '    <li>' + item + '</li>\n';
+                });
+                html += '</ul>';
+            }
+
+            return html.trim();
+        }
+
         // --- Логика приложения ---
         generateBtn.addEventListener('click', function() {
             const jobTitle = jobTitleInput.value.trim();
             const vacancyCount = vacancyCountInput.value;
-            const jobDescription = jobDescriptionInput.value;
+            let jobDescription = jobDescriptionInput.value;
 
             if (!jobTitle || !vacancyCount || !jobDescription) {
                 alert('Пожалуйста, заполните все поля.');
                 return;
             }
+
+            // Автоматически форматируем текст в HTML
+            jobDescription = formatTextToHTML(jobDescription);
 
             const timestamp = Date.now();
             const newHeaderId = String(timestamp).slice(-10);
