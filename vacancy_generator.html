@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- App Version: v0.2.1 -->
+    <!-- App Version: v0.2.3 -->
     <title>Генератор блоков вакансий</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -105,24 +105,24 @@
         .result-container {
             position: relative;
         }
-        #copyBtn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            padding: 6px 10px;
-            background-color: #f1f3f4;
-            color: var(--secondary-text-color);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            cursor: pointer;
-            display: none; /* Скрыта по умолчанию */
-            font-size: 12px;
-            font-weight: 500;
-            transition: background-color 0.2s;
+        #copyBtn, #copyDropdownBtn {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          padding: 6px 10px;
+          background-color: #f1f3f4;
+          color: var(--secondary-text-color);
+          border: 1px solid var(--border-color);
+          border-radius: 6px;
+          cursor: pointer;
+          display: none; /* Скрыта по умолчанию */
+          font-size: 12px;
+          font-weight: 500;
+          transition: background-color 0.2s;
         }
-        #copyBtn:hover {
-            background-color: #e8eaed;
-            border-color: var(--secondary-text-color);
+        #copyBtn:hover, #copyDropdownBtn:hover {
+          background-color: #e8eaed;
+          border-color: var(--secondary-text-color);
         }
         #copyMessage {
             text-align: center;
@@ -165,6 +165,16 @@
             </div>
             <div id="copyMessage">Код скопирован в буфер обмена!</div>
         </div>
+        <div class="result-group">
+          <label for="dropdownCode">Код выпадающего меню</label>
+          <div class="result-container">
+            <textarea id="dropdownCode" rows="6" readonly placeholder="Здесь появится код option для выпадающего меню..."></textarea>
+            <button id="copyDropdownBtn">Копировать</button>
+          </div>
+          <div style="margin-top:8px;"><em>Блок можно найти по тексту <span id="findText" title="нажми чтобы скопировать" style="cursor:pointer;text-decoration:underline;">Выберите вариант из списка</span></em></div>
+          <div id="findCopyMessage" style="text-align:center;margin-top:8px;color:var(--success-color);font-weight:500;display:none">Текст скопирован в буфер обмена!</div>
+          <div id="dropdownCopyMessage" style="text-align:center;margin-top:8px;color:var(--success-color);font-weight:500;display:none">Код скопирован в буфер обмена!</div>
+        </div>
     </div>
 
     <script>
@@ -178,6 +188,11 @@
         const resultCodeTextarea = document.getElementById('resultCode');
         const copyBtn = document.getElementById('copyBtn');
         const copyMessage = document.getElementById('copyMessage');
+        const dropdownCodeTextarea = document.getElementById('dropdownCode');
+        const copyDropdownBtn = document.getElementById('copyDropdownBtn');
+        const dropdownCopyMessage = document.getElementById('dropdownCopyMessage');
+        const findTextElem = document.getElementById('findText');
+        const findCopyMessage = document.getElementById('findCopyMessage');
 
         // --- ID-плейсхолдеры для замены ---
         const HEADER_ID_PLACEHOLDER = '6570311247'; // ID из примера
@@ -927,6 +942,11 @@
             const finalHtml = finalHeaderCode + '\n' + finalBodyCode; 
             resultCodeTextarea.value = finalHtml;
 
+            // Формируем код option для выпадающего меню и помещаем в поле
+            const optionHtml = `                            <option\n                              value="${jobTitle}"\n                              style="color: #000000"\n                            >\n                              ${jobTitle}\n                            </option>`;
+            if (dropdownCodeTextarea) dropdownCodeTextarea.value = optionHtml;
+            if (copyDropdownBtn) copyDropdownBtn.style.display = 'block';
+
             if (resultCodeTextarea.value) {
                 copyBtn.style.display = 'block';
             }
@@ -943,6 +963,55 @@
                 copyBtn.textContent = 'Копировать';
             }, 2000);
         });
+
+        // Копирование для кода выпадающего меню
+        if (copyDropdownBtn) {
+          copyDropdownBtn.addEventListener('click', function() {
+            if (!dropdownCodeTextarea) return;
+            dropdownCodeTextarea.select();
+            document.execCommand('copy');
+            if (dropdownCopyMessage) dropdownCopyMessage.style.display = 'block';
+            copyDropdownBtn.textContent = 'Скопировано!';
+            setTimeout(() => {
+              if (dropdownCopyMessage) dropdownCopyMessage.style.display = 'none';
+              copyDropdownBtn.textContent = 'Копировать';
+            }, 2000);
+          });
+        }
+
+        // Копирование текста подсказки "Выберите вариант из списка" при клике
+        if (findTextElem) {
+          findTextElem.addEventListener('click', function() {
+            const textToCopy = 'Выберите вариант из списка';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(textToCopy).then(() => {
+                if (findCopyMessage) findCopyMessage.style.display = 'block';
+                setTimeout(() => { if (findCopyMessage) findCopyMessage.style.display = 'none'; }, 2000);
+              }).catch(() => {
+                // fallback
+                const ta = document.createElement('textarea');
+                ta.value = textToCopy;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                if (findCopyMessage) findCopyMessage.style.display = 'block';
+                setTimeout(() => { if (findCopyMessage) findCopyMessage.style.display = 'none'; }, 2000);
+              });
+            } else {
+              const ta = document.createElement('textarea');
+              ta.value = textToCopy;
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand('copy');
+              document.body.removeChild(ta);
+              if (findCopyMessage) findCopyMessage.style.display = 'block';
+              setTimeout(() => { if (findCopyMessage) findCopyMessage.style.display = 'none'; }, 2000);
+            }
+          });
+
+          // Показ подсказки через атрибут title уже настроен (title="нажми чтобы скопировать")
+        }
 
     </script>
 </body>
